@@ -1,0 +1,80 @@
+create table electricity_Consumer(consumerNo NUMBER(8) constraint Pk_cn primary key, ConsumerName VARCHAR2(20) NOT NULL,
+emailId	VARCHAR2(35),UnitsConsumed NUMBER);
+
+create table electricity_Bill(BillNo NUMBER constraint pk_bn PRIMARY KEY,
+consumerNo	NUMBER constraint fk_cn references electricity_consumer(consumerNo) ON DELETE CASCADE,
+billAmount NUMBER,billPaidDate DATE);
+
+INSERT INTO electricity_Consumer values(1001,'Seema Joshi','Seema.joshi@gmail.com',250);
+INSERT INTO electricity_Consumer values(1002,'Amey Joshi','Amey.j@cg.com',345);
+INSERT INTO electricity_Consumer values(1003,'Pravin','Pravin.t@cg.com',457);
+INSERT INTO electricity_Consumer values(1004,'Manoj Kulkarni','manoj@gmail.com',780);
+INSERT INTO electricity_Consumer values(1005,'Shrikant Shinde','Shrikant.shinde@gmail.com',90);
+INSERT INTO electricity_Consumer values(1006,'Mahesh B','bMahesh@yahoo.com',720);
+
+INSERT INTO electricity_Bill values(101,1001,440.45,'25-May-2017');
+INSERT INTO electricity_Bill values(102,1002,690,'02-Jun-2018');
+INSERT INTO electricity_Bill values(103,1001,675,'05-Aug-2017');
+INSERT INTO electricity_Bill values(104,1004,678,'05-Aug-2000');
+INSERT INTO electricity_Bill values(105,1005,643,'08-Jan-2001');
+INSERT INTO electricity_Bill values(106,1004,900,'08-Feb-2010');
+INSERT INTO electricity_Bill values(107,1003,842,'12-May-2001');
+INSERT INTO electricity_Bill values(108,1002,421,'18-Sep-2009');
+INSERT INTO electricity_Bill values(109,1005,346,'20-Aug-2005');
+INSERT INTO electricity_Bill values(110,1005,342,'26-Jul-2001');
+
+CREATE SEQUENCE BillID_Seq START WITH 111;  
+
+create or replace procedure cal_ebill(cno in number) is
+units electricity_consumer.unitsConsumed%TYPE;
+ebill number;
+invalid_consumer_exception Exception;
+begin
+select unitsConsumed into units from electricity_consumer where consumerNo=cno;
+if(cno!=electricity_bill.consumerNo) then
+raise invalid_consumer_exception;
+end if;
+IF units <= 100 THEN
+ebill := units * 2.96;
+ELSE
+ebill := units * 5.56;
+END IF;
+Exception
+when invalid_consumer_exception then
+dbms_output.put_line('Consumer Not Found');
+insert into electricity_bill values(BillID_Seq.nextval, cno, ebill, sysdate);
+dbms_output.put_line(BillID_Seq.nextval || cno|| ebill||sysdate);
+end;
+/
+exec cal_ebill(&cno)
+
+
+create or replace procedure cal_ebill(cno in number) is
+units electricity_consumer.unitsConsumed%TYPE;
+ebill number;
+begin
+IF units <= 100 THEN
+ebill := units * 2.96;
+ELSE
+ebill := units * 5.56;
+END IF;
+select unitsConsumed into units from electricity_consumer where consumerNo=cno;
+insert into electricity_bill values(BillID_Seq.nextval, cno, ebill, sysdate);
+dbms_output.put_line(BillID_Seq.nextval || cno|| ebill||sysdate);
+end;
+/
+
+
+
+2.1 select consumerNo,ConsumerName as name from electricity_Consumer where 
+unitsconsumed= (select max(UnitsConsumed) from electricity_Consumer);
+2.2select consumerno from electricity_Bill group by 
+consumerno having count(consumerno)>1;
+3.alter table electricity_consumer add billPaymentDate date;
+alter table electricity_consumer add billPaymentDueDate date ;
+alter table electricity_consumer add constraint billDue_check 
+check (billPaymentDueDate between billPaymentDate and billPaymentDate+7);
+
+create or replace procedure Total_bill( consumerno IN number,
+begin
+select   BillNo,ConsumerNo,billAmount,billPaidDate   
